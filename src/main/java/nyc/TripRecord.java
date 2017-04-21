@@ -98,7 +98,7 @@ public class TripRecord {
                 }
             }
         } catch (Exception ex) {
-            Logger.println(file + "," + linenumber + "," + ex.getMessage());
+            Logger.printErr(file + "," + linenumber + "," + ex.getMessage());
 
         }
     }

@@ -14,31 +14,12 @@ public class NYCLoaderJava {
     private static String path = "/Volumes/SSD/data/";
     //    private static String path = "/Volumes/SSD/testdata/";
 
-
-    private final static DecimalFormat df = new DecimalFormat("#.###");
-
-
-    private static void printspeed(long starttime, long totallines, String file, boolean partial) {
-        long now = System.currentTimeMillis();
-        long diff = now - starttime;
-        double time = diff / 1000.0;
-        double speed = totallines / (1000.0 * time);
-        if (partial) {
-            System.out.println("File " + file + " partially done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
-        } else {
-            System.out.println("File " + file + " done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
-            System.out.println();
-        }
-
-    }
-
     public static void main(String[] args) {
         File folder = new File(path);
         File[] listOfFiles = folder.listFiles();
 
         long totallines = 0;
         long lineinfile = 0;
-        long starttime = System.currentTimeMillis();
         String line;
         Logger.start();
 
@@ -71,10 +52,10 @@ public class NYCLoaderJava {
                     }
 
                     if (totallines % 1000000 == 0) {
-                        printspeed(starttime, totallines, listOfFile.getName(), true);
+                        Logger.printSpeed(totallines, listOfFile.getName(), true);
                     }
                 }
-                printspeed(starttime, totallines, listOfFile.getName(), false);
+                Logger.printSpeed(totallines, listOfFile.getName(), false);
             }
             Logger.close();
         } catch (Exception ex) {

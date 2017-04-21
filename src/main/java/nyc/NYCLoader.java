@@ -206,10 +206,9 @@ public class NYCLoader {
                                 .thenDo(new ActionFunction() {
                                     @Override
                                     public void eval(TaskContext ctx) {
-                                        processTime(ctx);
+                                        Logger.printSpeed((long) ctx.variable("counter").get(0),(String) ctx.variable("file").get(0),false);
                                     }
                                 })
-                                .log("File {{file}} done. Parsed lines: {{counter}}, time elapsed: {{processtime}} s, speed: {{speed}} v/s")
                                 .save()
                         )
 
@@ -277,20 +276,18 @@ public class NYCLoader {
                                                 .thenDo(new ActionFunction() {
                                                     @Override
                                                     public void eval(TaskContext ctx) {
-                                                        processTime(ctx);
+                                                        Logger.printSpeed((long) ctx.variable("counter").get(0),(String) ctx.variable("file").get(0),false);
                                                     }
                                                 })
-                                                .log("File {{file}} partially done. Parsed lines: {{counter}}, time elapsed: {{processtime}} s, speed: {{speed}} v/s")
                                                 .save())
 
                                 )
                                 .thenDo(new ActionFunction() {
                                     @Override
                                     public void eval(TaskContext ctx) {
-                                        processTime(ctx);
+                                        Logger.printSpeed((long) ctx.variable("counter").get(0),(String) ctx.variable("file").get(0),false);
                                     }
                                 })
-                                .log("File {{file}} done. Parsed lines: {{counter}}, time elapsed: {{processtime}} s, speed: {{speed}} v/s")
                                 .save()
 
                         );
