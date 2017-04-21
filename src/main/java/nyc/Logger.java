@@ -16,7 +16,7 @@ public class Logger {
     private static BufferedWriter speedWriter;
     private static long starttime;
 
-    private static int totalerrors = 0;
+    private static long totalerrors = 0;
 
 
     public static void start() {
@@ -28,7 +28,7 @@ public class Logger {
             errorWriter.flush();
 
             speedWriter = new BufferedWriter(new FileWriter(path + "speed.csv"));
-            speedWriter.write("file,partial,total lines,total time (in s),speed (kv/s)");
+            speedWriter.write("file,partial,total lines,total time (in s),speed (kv/s), total errors");
             speedWriter.newLine();
             speedWriter.flush();
         } catch (IOException e) {
@@ -56,16 +56,16 @@ public class Logger {
         double time = diff / 1000.0;
         double speed = totallines / (1000.0 * time);
         try {
-            speedWriter.write(file + "," + partial + "," + totallines + "," + time + "," + speed);
+            speedWriter.write(file + "," + partial + "," + totallines + "," + time + "," + speed+","+totalerrors);
             speedWriter.newLine();
             speedWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
         if (partial) {
-            System.out.println("File " + file + " partially done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
+            System.out.println("File " + file + " partially done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s, total err: "+totalerrors);
         } else {
-            System.out.println("File " + file + " done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
+            System.out.println("File " + file + " done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s, total err: "+totalerrors);
             System.out.println();
         }
     }
