@@ -16,15 +16,18 @@ public class Logger {
     private static BufferedWriter speedWriter;
     private static long starttime;
 
-    public static void start(){
+    private static int totalerrors = 0;
+
+
+    public static void start() {
         try {
-            starttime=System.currentTimeMillis();
-            errorWriter = new BufferedWriter(new FileWriter(path+"error.csv"));
+            starttime = System.currentTimeMillis();
+            errorWriter = new BufferedWriter(new FileWriter(path + "error.csv"));
             errorWriter.write("file,line number,exception");
             errorWriter.newLine();
             errorWriter.flush();
 
-            speedWriter = new BufferedWriter(new FileWriter(path+"speed.csv"));
+            speedWriter = new BufferedWriter(new FileWriter(path + "speed.csv"));
             speedWriter.write("file,partial,total lines,total time (in s),speed (kv/s)");
             speedWriter.newLine();
             speedWriter.flush();
@@ -33,8 +36,9 @@ public class Logger {
         }
     }
 
-    public static void printErr(String s){
+    public static void printErr(String s) {
         try {
+            totalerrors++;
             errorWriter.write(s);
             errorWriter.newLine();
             errorWriter.flush();
@@ -50,7 +54,7 @@ public class Logger {
         double time = diff / 1000.0;
         double speed = totallines / (1000.0 * time);
         try {
-            speedWriter.write(file+","+partial+","+totallines+","+time+","+speed);
+            speedWriter.write(file + "," + partial + "," + totallines + "," + time + "," + speed);
             speedWriter.newLine();
             speedWriter.flush();
         } catch (IOException e) {
@@ -65,8 +69,9 @@ public class Logger {
     }
 
 
-    public static void close(){
+    public static void close() {
         try {
+            System.out.println("Total errors: " + totalerrors);
             errorWriter.close();
             speedWriter.close();
         } catch (IOException e) {
