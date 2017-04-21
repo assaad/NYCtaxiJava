@@ -22,11 +22,11 @@ public class NYCLoaderJava {
         long now = System.currentTimeMillis();
         long diff = now - starttime;
         double time = diff / 1000.0;
-        double speed = totallines /(1000.0* time);
+        double speed = totallines / (1000.0 * time);
         if (partial) {
-            System.out.println("File " + file + " partially done: " + (totallines/1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
+            System.out.println("File " + file + " partially done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
         } else {
-            System.out.println("File " + file + " done: " + (totallines/1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
+            System.out.println("File " + file + " done: " + (totallines / 1000000) + "M, time elapsed: " + time + " s, speed: " + df.format(speed) + " kv/s");
             System.out.println();
         }
 
@@ -40,6 +40,7 @@ public class NYCLoaderJava {
         long lineinfile = 0;
         long starttime = System.currentTimeMillis();
         String line;
+        Logger.start();
 
         try {
             for (File listOfFile : listOfFiles) {
@@ -53,7 +54,10 @@ public class NYCLoaderJava {
                 String[] fields = null;
 
                 while ((line = br.readLine()) != null) {
-                    if (lineinfile == 0) {
+                    lineinfile++;
+                    totallines++;
+
+                    if (lineinfile == 1) {
                         headers = line.split(",");
                         for (int j = 0; j < headers.length; j++) {
                             headers[j] = headers[j].toLowerCase().trim();
@@ -63,17 +67,16 @@ public class NYCLoaderJava {
                         for (int j = 0; j < fields.length; j++) {
                             fields[j] = fields[j].trim();
                         }
-                        TripRecord r = new TripRecord(headers, fields);
+                        TripRecord r = new TripRecord(headers, fields, listOfFile.getName(), lineinfile);
                     }
 
-                    lineinfile++;
-                    totallines++;
                     if (totallines % 1000000 == 0) {
                         printspeed(starttime, totallines, listOfFile.getName(), true);
                     }
                 }
                 printspeed(starttime, totallines, listOfFile.getName(), false);
             }
+            Logger.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

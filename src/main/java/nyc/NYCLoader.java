@@ -48,6 +48,7 @@ public class NYCLoader {
     public static void main(String[] args) {
 
         deleteTestBase();
+        Logger.start();
 
 
         final SimpleDateFormat weatherDateFormat = new SimpleDateFormat("yyyyMMdd");
@@ -218,6 +219,7 @@ public class NYCLoader {
                                 .declareVar("headers")
                                 .declareVar("vendor")
                                 .declareVar("record")
+                                .declareVar("linenum")
                                 .declareVar("tripstart")
                                 .declareVar("tripend")
                                 .then(readLines("{{result}}"))
@@ -227,6 +229,10 @@ public class NYCLoader {
                                                         long counter = (long) ctx.variable("counter").get(0);
                                                         counter++;
                                                         ctx.setVariable("counter", counter);
+                                                        long linenum = (long) ctx.variable("linenum").get(0);
+                                                        linenum++;
+                                                        ctx.setVariable("linenum", linenum);
+
                                                         String line = (String) ctx.result().get(0);
                                                         String[] fields = line.split(",");
                                                         int i = (int) ctx.variable("i").get(0);
@@ -239,6 +245,7 @@ public class NYCLoader {
                                                             ctx.setVariable("vendor", null);
                                                             ctx.setVariable("record", null);
                                                             ctx.setVariable("tripstart", null);
+                                                            ctx.setVariable("linenum", 1);
                                                             ctx.setVariable("tripend", null);
                                                             ctx.continueTask();
                                                         } else {
@@ -247,7 +254,7 @@ public class NYCLoader {
                                                             }
                                                             Object[] headers = ctx.variable("headers").asArray();
 
-                                                            TripRecord tripRecord =new TripRecord(headers,fields);
+                                                            TripRecord tripRecord = new TripRecord(headers, fields, (String) ctx.variable("file").get(0), linenum);
                                                             Node record = tripRecord.getNode(graph);
 
                                                             ctx.setVariable("vendor", tripRecord.vendorID);
@@ -294,6 +301,7 @@ public class NYCLoader {
                         if (result.exception() != null) {
                             result.exception().printStackTrace();
                         }
+                        Logger.close();
                     }
                 });
                 context.setVariable("starttime", System.currentTimeMillis());
@@ -305,8 +313,6 @@ public class NYCLoader {
             }
         });
     }
-
-
 
 
     public static void deleteTestBase() {

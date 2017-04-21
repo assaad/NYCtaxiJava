@@ -4,6 +4,9 @@ import greycat.Graph;
 import greycat.Node;
 import greycat.Type;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
@@ -15,9 +18,11 @@ public class TripRecord {
     private final static SimpleDateFormat yellowDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     private final static SimpleDateFormat yellowDateFormat2 = new SimpleDateFormat("dd/MM/yyyy hh:mm");
 
+
     static {
         yellowDateFormat.setTimeZone(TimeZone.getTimeZone("America/New_York"));
         yellowDateFormat2.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+
     }
 
     public String vendorID = "";
@@ -31,9 +36,8 @@ public class TripRecord {
     public char store_and_fwd_flag = '-';
     public int payment_type = -1;
 
-    public TripRecord(Object[] headers, String[] fields) {
+    public TripRecord(Object[] headers, String[] fields, String file, long linenumber) {
         try {
-
             for (int j = 0; j < Math.min(headers.length, fields.length); j++) {
                 if (fields[j].equals("")) {
                     continue;
@@ -94,7 +98,8 @@ public class TripRecord {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.println(file + "," + linenumber + "," + ex.getMessage());
+
         }
     }
 
