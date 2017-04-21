@@ -41,11 +41,13 @@ public class Logger {
             totalerrors++;
             errorWriter.write(s);
             errorWriter.newLine();
-            errorWriter.flush();
+            if(totalerrors%10000==0) {
+                errorWriter.flush();
+                System.err.println(s+", total err: "+totalerrors);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.err.println(s);
     }
 
     public static void printSpeed(long totallines, String file, boolean partial) {
