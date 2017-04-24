@@ -38,6 +38,8 @@ public class TripRecord {
 
     public TripRecord(Object[] headers, String[] fields, String file, long linenumber) {
         try {
+
+
             for (int j = 0; j < Math.min(headers.length, fields.length); j++) {
                 if (fields[j].equals("")) {
                     continue;
@@ -99,7 +101,6 @@ public class TripRecord {
             }
         } catch (Exception ex) {
             Logger.printErr(file + "," + linenumber + "," + ex.getMessage());
-
         }
     }
 

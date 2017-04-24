@@ -41,7 +41,7 @@ public class Logger {
             totalerrors++;
             errorWriter.write(s);
             errorWriter.newLine();
-            if(totalerrors%10000==0) {
+            if(totalerrors%100==0) {
                 errorWriter.flush();
                 System.err.println(s+", total err: "+totalerrors);
             }
