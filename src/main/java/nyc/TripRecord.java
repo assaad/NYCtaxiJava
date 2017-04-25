@@ -8,6 +8,8 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.TimeZone;
 
 /**
@@ -17,6 +19,7 @@ import java.util.TimeZone;
 public class TripRecord {
     private final static SimpleDateFormat yellowDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     private final static SimpleDateFormat yellowDateFormat2 = new SimpleDateFormat("dd/MM/yyyy hh:mm");
+    private static Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"));
 
 
     static {
@@ -186,11 +189,34 @@ public class TripRecord {
             record.set("payment_type", Type.INT, payment_type);
         }
         if (pulocationid != -1) {
-            record.set("pulocationid", Type.INT, payment_type);
+            record.set("pulocationid", Type.INT, pulocationid);
         }
         if (dolocationid != -1) {
-            record.set("dolocationid", Type.INT, payment_type);
+            record.set("dolocationid", Type.INT, dolocationid);
         }
         return record;
+    }
+
+
+    public double[] getVector() {
+        double[] res = new double[10];
+
+        calendar.setTime(new Date(pickup_datetime));
+        int day = calendar.get(Calendar.DAY_OF_WEEK); //so this is 1:Sunday -> 7:Saturday
+        int hour = calendar.get(Calendar.HOUR_OF_DAY); //this is from 0 ->23
+        int min = calendar.get(Calendar.MINUTE);
+
+        res[0] = day;
+        res[1] = hour + min / 60.0;
+
+        res[2] = (dropoff_datetime - pickup_datetime) / 60000.0;
+        res[3] = pickup_latitude;
+        res[4] = pickup_longitude;
+        res[5] = dropoff_latitude;
+        res[6] = dropoff_longitude;
+        res[7] = passenger_count;
+        res[8] = payment_type;
+        res[9] = total;
+        return res;
     }
 }

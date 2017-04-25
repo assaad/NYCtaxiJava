@@ -2,8 +2,12 @@ package nyc;
 
 import greycat.*;
 import greycat.importer.ImporterPlugin;
+import greycat.internal.tree.NDTree;
 import greycat.leveldb.LevelDBStorage;
 import greycat.ml.MLPlugin;
+import greycat.ml.profiling.Gaussian;
+import greycat.ml.profiling.GaussianNode;
+import greycat.struct.DMatrix;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +30,7 @@ import static greycat.importer.ImporterActions.readLines;
  */
 public class NYCLoader {
     private static String path = "/Volumes/SSD/data/";
-    //    private static String path = "/Volumes/SSD/testdata/";
+    //        private static String path = "/Volumes/SSD/testdata/";
 //    private static String leveldb = "/Volumes/NTFS/database/nyc/leveldb/";
     private static String leveldb = "/Users/assaad/Desktop/leveldb/";
 
@@ -206,7 +210,8 @@ public class NYCLoader {
                                 .thenDo(new ActionFunction() {
                                     @Override
                                     public void eval(TaskContext ctx) {
-                                        Logger.printSpeed((long) ctx.variable("counter").get(0),(String) ctx.variable("file").get(0),false);
+                                        Logger.printSpeed((long) ctx.variable("counter").get(0), (String) ctx.variable("file").get(0), false);
+                                        ctx.continueTask();
                                     }
                                 })
                                 .save()
@@ -214,83 +219,110 @@ public class NYCLoader {
 
                         .readVar("yellow")
                         .forEach(newTask()
-                                .setAsVar("file")
-                                .declareVar("headers")
-                                .declareVar("vendor")
-                                .declareVar("record")
-                                .declareVar("linenum")
-                                .declareVar("tripstart")
-                                .declareVar("tripend")
-                                .then(readLines("{{result}}"))
-                                .forEach(newTask()
-                                        .thenDo(new ActionFunction() {
-                                                    public void eval(TaskContext ctx) {
-                                                        long counter = (long) ctx.variable("counter").get(0);
-                                                        counter++;
-                                                        ctx.setVariable("counter", counter);
-                                                        long linenum = (long) ctx.variable("linenum").get(0);
-                                                        linenum++;
-                                                        ctx.setVariable("linenum", linenum);
+                                        .setAsVar("file")
+                                        .declareVar("headers")
+                                        .declareVar("vendor")
+                                        .declareVar("record")
+                                        .inject(0)
+                                        .setAsVar("linenum")
+                                        .declareVar("tripstart")
+                                        .declareVar("tripend")
+                                        .readVar("file")
+                                        .then(readLines("{{result}}"))
 
-                                                        String line = (String) ctx.result().get(0);
-                                                        String[] fields = line.split(",");
-                                                        int i = (int) ctx.variable("i").get(0);
+                                        .forEach(newTask()
+                                                        .thenDo(new ActionFunction() {
+                                                                    public void eval(TaskContext ctx) {
+                                                                        long counter = (long) ctx.variable("counter").get(0);
+                                                                        counter++;
+                                                                        ctx.setVariable("counter", counter);
+                                                                        int linenum = (int) ctx.variable("linenum").get(0);
+                                                                        linenum++;
+                                                                        ctx.setVariable("linenum", linenum);
 
-                                                        if (i == 0) {
-                                                            for (int j = 0; j < fields.length; j++) {
-                                                                fields[j] = fields[j].toLowerCase().trim();
+//                                                        GaussianNode profile = (GaussianNode) ctx.variable("profile").get(0);
+
+
+                                                                        String line = (String) ctx.result().get(0);
+                                                                        String[] fields = line.split(",");
+                                                                        int i = (int) ctx.variable("i").get(0);
+
+                                                                        if (i == 0) {
+                                                                            for (int j = 0; j < fields.length; j++) {
+                                                                                fields[j] = fields[j].toLowerCase().trim();
+                                                                            }
+                                                                            ctx.setVariable("headers", fields);
+                                                                            ctx.setVariable("vendor", null);
+                                                                            ctx.setVariable("record", null);
+                                                                            ctx.setVariable("tripstart", null);
+                                                                            ctx.setVariable("linenum", 1);
+                                                                            ctx.setVariable("tripend", null);
+                                                                            ctx.continueTask();
+                                                                        } else {
+                                                                            for (int j = 0; j < fields.length; j++) {
+                                                                                fields[j] = fields[j].trim();
+                                                                            }
+                                                                            Object[] headers = ctx.variable("headers").asArray();
+
+                                                                            TripRecord tripRecord = new TripRecord(headers, fields, (String) ctx.variable("file").get(0), linenum);
+                                                                            Node record = tripRecord.getNode(graph);
+                                                                            record.free();
+
+//                                                            double[] input = tripRecord.getVector();
+//                                                            profile.learn(input);
+
+
+//                                                            ctx.setVariable("vendor", tripRecord.vendorID);
+//                                                                            ctx.setVariable("record", record);
+//                                                            ctx.setVariable("tripstart", tripRecord.pickup_datetime);
+//                                                            ctx.setVariable("tripend", tripRecord.dropoff_datetime);
+                                                                            ctx.continueTask();
+                                                                        }
+                                                                    }
+                                                                }
+                                                        )
+//                                        .readVar("record")
+//                                        .addToGlobalIndex("record")
+                                                        .ifThen(new ConditionalFunction() {
+                                                            @Override
+                                                            public boolean eval(TaskContext ctx) {
+                                                                long count = (long) ctx.variable("counter").get(0);
+                                                                return count % 100000 == 0;
                                                             }
-                                                            ctx.setVariable("headers", fields);
-                                                            ctx.setVariable("vendor", null);
-                                                            ctx.setVariable("record", null);
-                                                            ctx.setVariable("tripstart", null);
-                                                            ctx.setVariable("linenum", 1);
-                                                            ctx.setVariable("tripend", null);
-                                                            ctx.continueTask();
-                                                        } else {
-                                                            for (int j = 0; j < fields.length; j++) {
-                                                                fields[j] = fields[j].trim();
-                                                            }
-                                                            Object[] headers = ctx.variable("headers").asArray();
+                                                        }, newTask()
+                                                                .thenDo(new ActionFunction() {
+                                                                    @Override
+                                                                    public void eval(TaskContext ctx) {
+                                                                        Logger.printSpeed((long) ctx.variable("counter").get(0), (String) ctx.variable("file").get(0), true);
+                                                                        ctx.continueTask();
+                                                                    }
+                                                                })
+                                                                .save())
 
-                                                            TripRecord tripRecord = new TripRecord(headers, fields, (String) ctx.variable("file").get(0), linenum);
-                                                            Node record = tripRecord.getNode(graph);
-
-                                                            ctx.setVariable("vendor", tripRecord.vendorID);
-                                                            ctx.setVariable("record", record);
-                                                            ctx.setVariable("tripstart", tripRecord.pickup_datetime);
-                                                            ctx.setVariable("tripend", tripRecord.dropoff_datetime);
-                                                            record.free();
-                                                            ctx.continueTask();
-                                                        }
-                                                    }
-                                                }
                                         )
-                                        .ifThen(new ConditionalFunction() {
+                                        .thenDo(new ActionFunction() {
                                             @Override
-                                            public boolean eval(TaskContext ctx) {
-                                                long count = (long) ctx.variable("counter").get(0);
-                                                return count % 500000 == 0;
+                                            public void eval(TaskContext ctx) {
+                                                Logger.printSpeed((long) ctx.variable("counter").get(0), (String) ctx.variable("file").get(0), false);
+                                                ctx.continueTask();
                                             }
-                                        }, newTask()
-                                                .thenDo(new ActionFunction() {
-                                                    @Override
-                                                    public void eval(TaskContext ctx) {
-                                                        Logger.printSpeed((long) ctx.variable("counter").get(0),(String) ctx.variable("file").get(0),false);
-                                                    }
-                                                })
-                                                .save())
+                                        })
+                                        .save()
 
-                                )
-                                .thenDo(new ActionFunction() {
-                                    @Override
-                                    public void eval(TaskContext ctx) {
-                                        Logger.printSpeed((long) ctx.variable("counter").get(0),(String) ctx.variable("file").get(0),false);
-                                    }
-                                })
-                                .save()
+                        ).thenDo(new ActionFunction() {
+                            @Override
+                            public void eval(TaskContext ctx) {
+                                GaussianNode profile = (GaussianNode) ctx.variable("profile").get(0);
+                                double[] avg = (double[]) profile.get(Gaussian.AVG);
+                                double[] min = (double[]) profile.get(Gaussian.MIN);
+                                double[] max = (double[]) profile.get(Gaussian.MAX);
+                                double[] std = (double[]) profile.get(Gaussian.STD);
+                                int t = (int) profile.get(Gaussian.TOTAL);
+                                DMatrix cov = (DMatrix) profile.get(Gaussian.COV);
 
-                        );
+                                ctx.continueTask();
+                            }
+                        });
 
 
                 TaskContext context = readFiles.prepare(graph, null, new Callback<TaskResult>() {
@@ -298,9 +330,14 @@ public class NYCLoader {
                         if (result.exception() != null) {
                             result.exception().printStackTrace();
                         }
+
+
                         Logger.close();
                     }
                 });
+
+                Node profile = graph.newTypedNode(0, 0, GaussianNode.NAME);
+                context.setVariable("profile", profile);
                 context.setVariable("starttime", System.currentTimeMillis());
                 context.setVariable("path", path);
                 context.setVariable("counter", 0l);
